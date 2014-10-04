@@ -1,0 +1,184 @@
+<?php
+/**
+ * @file
+ * Manage owner of the property
+ */
+
+define('TABLE_OWNER_DETAILS', 'owner_details');
+
+/**
+ *  Implements hook_help().
+ */
+function owner_help($path, $arg)
+{
+  $output = '';
+  switch($path) {
+    case 'admin/help#owner':
+      $output .= '<h3>' . t('About') . '</h3>';
+      break;
+  }
+
+  return $output;
+}
+
+/**
+ *  Implements hook_permission().
+ */
+function owner_permission()
+{
+  $perms = array(
+    'create owner' => array(
+      'title' => t('Create new Owner'),
+    ),
+    'edit owner' => array(
+      'title' => t('Edit owner information'),
+    ),
+    'owner list' => array(
+      'title' => t('View owner list'),
+    ),
+    'owner portal' => array(
+      'title' => t('Owner portal access')
+    ),
+  );
+
+  return $perms;
+}
+
+/**
+ *  Implements hook_menu().
+ */
+function owner_menu()
+{
+  $route = array();
+
+  //register owner
+  $route['owner/register'] = array(
+    'title' => t('Create Owner'),
+    'access arguments' => array('create owner'),
+    'type' => MENU_NORMAL_ITEM,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('owner_register_form'),
+    'file' => 'inc/owner.register.inc',
+  );
+
+  //view owners
+  $route['owner/lists'] = array(
+    'title' => t('Owner Lists'),
+    'access arguments' => array('owner list'),
+    'page callback' => 'owner_lists_page',
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'inc/owner.list.inc',
+  );
+
+  //edit owner information
+  $route['owner/edit/%'] = array(
+    'title' => t('Edit Owner'),
+    'access arguments' => array('edit owner'),
+    'type' => MENU_CALLBACK,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('owner_edit_form', 2),
+    'file' => 'inc/owner.edit.inc',
+  );
+
+  //owner portal
+  $route['owner/portal'] = array(
+    'title' => t('Owner Portal'),
+    'access arguments' => array('owner portal'),
+    'type' => MENU_NORMAL_ITEM,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('owner_register_form'),
+    'file' => 'inc/owner.portal.inc',
+  );
+
+  return $route;
+}
+
+/**
+ *  Implements hook_enable().
+ */
+function owner_enable()
+{
+  if (db_table_exists(TABLE_OWNER_DETAILS) === FALSE) {
+    drupal_install_schema('owner');
+  }
+}
+
+/**
+ * Load Owner Details by user id
+ *
+ * @param $id
+ * @return mixed
+ */
+function owner_load_by_id($id)
+{
+  $owner_details = db_select(TABLE_OWNER_DETAILS, 'own')
+                  ->fields('own')
+                  ->condition('own.id', $id, '=')
+                  ->execute()
+                  ->fetchAssoc();
+  return $owner_details;
+}
+
+/**
+ * @helper
+ * validate email
+ * @param $element
+ * @param $form_state
+ * @param $form
+ */
+function owner_email_element_validate($element, &$form_state, $form)
+{
+  if (!valid_email_address($element['#value'])) {
+    form_error($element, t('Please enter a valid email address.'));
+  }
+}
+
+/**
+ * @helper
+ * validate zip code
+ * @param $element
+ * @param $form_state
+ * @param $form
+ */
+function owner_zip_element_validate($element, &$form_state, $form)
+{
+  if (!is_numeric($element['#value']) || strlen($element['#value'] < 5)) {
+    form_error($element, t('Please enter a valid zip code.'));
+  }
+}
+
+/**
+ * @helper
+ * validate phone
+ * @param $element
+ * @param $form_state
+ * @param $form
+ */
+function owner_phone_element_validate($element, &$form_state, $form)
+{
+  if(!preg_match("/^[0-9]{3}-[0-9]{4}-[0-9]{4}$/", $element['#value'])) {
+    form_error($element, t('Valid phone number format : 000-0000-0000.'));
+  }
+}
+
+/**
+ * @helper
+ * validate uniqueness
+ * @param $table
+ * @param $column
+ * @param $value
+ * @return bool
+ */
+function owner_check_unique($table, $column, $value)
+{
+  $db_statement = db_query('SELECT COUNT(*) AS totalRowFound FROM {' . $table . '} WHERE `' . $column . '` = :column_value LIMIT 1', array(
+    ':column_value' => $value
+  ));
+  $result = $db_statement->fetchAssoc();
+
+  if(isset($result['totalRowFound'])) {
+    return ! boolval($result['totalRowFound']);
+  }
+
+  return FALSE;
+}

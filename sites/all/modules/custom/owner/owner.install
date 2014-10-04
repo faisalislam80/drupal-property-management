@@ -1,0 +1,133 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the property owner module.
+ */
+
+/**
+ *  @schema
+ *  Implements hook_schema().
+ */
+function owner_schema()
+{
+  $schema['owner_details'] = array(
+    'description' => 'Stores owner details information.',
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique owner ID.',
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "User's {users}.uid.",
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Owners full name.',
+      ),
+      'company' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Owners company.',
+      ),
+      'address_line_1' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Owners address line 1',
+      ),
+      'address_line_2' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Owners address line 2',
+      ),
+      'city' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Owners city name',
+      ),
+      'state' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Owners state name',
+      ),
+      'zip' => array(
+        'type' => 'int',
+        'length' => 5,
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Owners zip code',
+      ),
+      'country' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Owners country name',
+      ),
+      'phone' => array(
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Owners phone number',
+      ),
+      'cell' => array(
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Owners cell number',
+      ),
+    ),
+    'primary key' => array('id'),
+    'foreign keys' => array(
+      'user' => array(
+        'table' => 'users',
+        'columns' => array('uid' => 'uid'),
+      ),
+    ),
+  );
+
+  return $schema;
+}
+
+/**
+ *  @installer
+ * Implements hook_install().
+ */
+function owner_install()
+{
+  if (db_table_exists('owner_details') === FALSE) {
+    drupal_install_schema('owner');
+  }
+}
+
+/**
+ *  @uninstaller
+ *  Implements hook_uninstall().
+ */
+function owner_uninstall()
+{
+  if (db_table_exists('owner_details') === TRUE) {
+    drupal_uninstall_schema('owner');
+  }
+}
